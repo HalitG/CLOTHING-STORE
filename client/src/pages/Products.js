@@ -31,7 +31,7 @@ const Products = () => {
       <h1 className="text-3xl font-bold mb-8">Our Products</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {products.map((product) => (
-          <Link key={product.id}>
+          <Link key={product.id} to={`/products/${product.id}`}>
             <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
               <img
                 src={`http://localhost:5000/api/products/images/${
