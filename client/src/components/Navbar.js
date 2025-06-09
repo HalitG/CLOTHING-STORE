@@ -14,6 +14,14 @@ const Navbar = () => {
             <Link to="/products" className="tex-gray-600 hover:text-blue-600">
               Products
             </Link>
+
+            <Link to="/login" className="tex-gray-600 hover:text-blue-600">
+              Login
+            </Link>
+
+            <Link to="/register" className="tex-gray-600 hover:text-blue-600">
+              Register
+            </Link>
           </div>
         </div>
       </div>

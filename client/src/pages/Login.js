@@ -1,13 +1,25 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleSubmit = async (e) => {};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    const result = await Login(email, password);
+    if (result.success) {
+      navigate("/");
+    } else {
+      setError(result.message);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
