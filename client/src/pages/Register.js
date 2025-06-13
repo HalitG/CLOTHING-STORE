@@ -25,7 +25,7 @@ const Register = () => {
     e.preventDefault();
     setError("");
 
-    const result = await Register(formData);
+    const result = await register(formData);
     if (result.success) {
       navigate("/");
     } else {

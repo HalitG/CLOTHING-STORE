@@ -13,7 +13,7 @@ const Login = () => {
     e.preventDefault();
     setError("");
 
-    const result = await Login(email, password);
+    const result = await login(email, password);
     if (result.success) {
       navigate("/");
     } else {

@@ -1,11 +1,4 @@
-import React, {
-  createContext,
-  useState,
-  useContext,
-  useEffect,
-  Children,
-  use,
-} from "react";
+import React, { createContext, useState, useContext, useEffect } from "react";
 
 const AuthContext = createContext(null);
 
@@ -16,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
+      setLoading(false);
     } else {
       setLoading(false);
     }
@@ -51,8 +45,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
-        header: {
-          "Content-type": "application/json",
+        headers: {
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(userData),
       });
@@ -69,7 +63,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, register }}>
       {!loading && children}
     </AuthContext.Provider>
   );

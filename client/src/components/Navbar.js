@@ -1,7 +1,16 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
   return (
     <nav className="bg-white shadow-md">
       <div className="container mx-auto px-4">
@@ -15,13 +24,22 @@ const Navbar = () => {
               Products
             </Link>
 
-            <Link to="/login" className="tex-gray-600 hover:text-blue-600">
-              Login
-            </Link>
+            {user ? (
+              <button onClick={handleLogout}>Logout</button>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Link to="/login" className="tex-gray-600 hover:text-blue-600">
+                  Login
+                </Link>
 
-            <Link to="/register" className="tex-gray-600 hover:text-blue-600">
-              Register
-            </Link>
+                <Link
+                  to="/register"
+                  className="tex-gray-600 hover:text-blue-600"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
