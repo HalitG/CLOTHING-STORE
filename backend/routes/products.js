@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("../config/database");
 const upload = require("../middleware/upload");
-const fs = require("fs").promise;
+const fs = require("fs").promises;
 const path = require("path");
 
 // Create uploads directory if it doesn't exist
@@ -75,3 +75,5 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: "Error fetching products" });
   }
 });
+
+module.exports = router;
