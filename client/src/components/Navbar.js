@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -20,12 +20,32 @@ const Navbar = () => {
           </Link>
 
           <div className="flex items-center space-x-8">
-            <Link to="/products" className="tex-gray-600 hover:text-blue-600">
-              Products
-            </Link>
+            {/* Public links */}
+            {!isAdmin() && (
+              <Link to="/products" className="tex-gray-600 hover:text-blue-600">
+                Products
+              </Link>
+            )}
 
             {user ? (
-              <button onClick={handleLogout}>Logout</button>
+              <>
+                <div className="flex items-center space-x-6">
+                  <Link
+                    to="/admin"
+                    className="text-gray600 hover:text-blue-600"
+                  >
+                    Admin Dashboard
+                  </Link>
+
+                  <Link
+                    to="/admin/products"
+                    className="text-gray600 hover:text-blue-600"
+                  >
+                    Products
+                  </Link>
+                </div>
+                <button onClick={handleLogout}>Logout</button>
+              </>
             ) : (
               <div className="flex items-center space-x-4">
                 <Link to="/login" className="tex-gray-600 hover:text-blue-600">
