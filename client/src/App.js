@@ -10,6 +10,7 @@ import Register from "./pages/Register";
 import { AuthProvider } from "./context/AuthContext";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminProducts from "./pages/AdminProducts";
+import AdminProductCreate from "./pages/AdminProductCreate";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/products/new" element={<AdminProductCreate />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
