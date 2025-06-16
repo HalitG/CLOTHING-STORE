@@ -27,14 +27,67 @@ const AdminProductCreate = () => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      const data = response.json();
+      const data = await response.json();
       setCategories(data);
     } catch (error) {
-      console.error(`Error fetching categories:`, error);
+      console.error("Error fetching categories:", error);
     }
   };
 
-  return <ProductForm />;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(false);
+    setError("");
+
+    try {
+      const productFormData = new FormData();
+
+      Object.keys(formData).forEach((key) => {
+        productFormData.append(key, formData[key]);
+      });
+
+      images.forEach((image) => {
+        productFormData.append("images", image);
+      });
+
+      const response = await fetch("http://localhost:5000/api/admin/products", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: productFormData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create product");
+      }
+
+      navigate("/admin/products");
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <ProductForm
+      formData={formData}
+      categories={categories}
+      onSubmit={handleSubmit}
+      onChange={(e) =>
+        setFormData((prev) => ({
+          ...prev,
+          [e.target.name]: e.target.value,
+        }))
+      }
+      onImageChange={(e) => setImages(Array.from(e.target.files))}
+      loading={loading}
+      error={error}
+      submitText="Create Product"
+      onCancel={() => navigate("/admin/products")}
+    />
+  );
 };
 
 export default AdminProductCreate;
