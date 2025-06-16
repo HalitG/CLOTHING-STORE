@@ -59,13 +59,13 @@ router.post(
       if (req.files && req.files.length > 0) {
         const imageValues = req.files.map((file) => [
           result.insertId,
-          file.fileName,
+          file.filename,
           file.path,
         ]);
 
         await db.query(
           "INSERT INTO product_images (product_id, filename, filepath) VALUES ?",
-          { imageValues }
+          [imageValues]
         );
       }
 
@@ -140,7 +140,7 @@ router.put(
         // Add new images
         const imageValues = req.files.map((file) => [
           productId,
-          file.fileName,
+          file.filename,
           file.path,
         ]);
         await db.query(
@@ -179,7 +179,7 @@ router.delete("/products/:id", adminAuth, async (req, res) => {
     await db.query("DELETE FROM product_images WHERE product_id = ?", [
       req.params.id,
     ]);
-    await db.query("DELETE FROM product WHERE id = ?", [req.params.id]);
+    await db.query("DELETE FROM products WHERE id = ?", [req.params.id]);
 
     await db.query("COMMIT");
     res.json({ message: "Product deleted succesfully" });
