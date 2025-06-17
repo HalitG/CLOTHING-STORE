@@ -76,4 +76,30 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get product by ID
+router.get("/:id", async (req, res) => {
+  try {
+    const [product] = await db.query(
+      // Updating the product
+      `SELECT p.*, c.name as category_name,
+              GROUP_CONCAT(pi.filename) as images
+       FROM products p
+       LEFT JOIN categories c ON p.category_id = c.id
+       LEFT JOIN product_images pi ON p.id = pi.product_id
+       WHERE p.id = ?
+       GROUP BY p.id`,
+      [req.params.id]
+    );
+
+    if (product.length === 0) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    res.json(product[0]);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ message: "Error fetching products" });
+  }
+});
+
 module.exports = router;
