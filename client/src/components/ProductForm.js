@@ -106,7 +106,7 @@ function ProductForm({
         {isEdit && currentImages && currentImages.length > 0 && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              currentImages
+              Current Images
             </label>
             <div className="grid grid-cols-4 gap-4">
               {currentImages.map((image, index) => (
