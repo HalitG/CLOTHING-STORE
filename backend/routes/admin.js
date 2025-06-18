@@ -123,20 +123,6 @@ router.put(
 
       // Handle new images
       if (req.files && req.files.length > 0) {
-        // Optional: Delete old images
-        const [oldImages] = await db.query(
-          "SELECT filename, filepath FROM product_images WHERE product_id = ?",
-          [productId]
-        );
-
-        for (const image of oldImages) {
-          await fs.unlink(image.filepath).catch(console.error);
-        }
-
-        await db.query("DELETE FROM product_images WHERE product_id = ?", [
-          productId,
-        ]);
-
         // Add new images
         const imageValues = req.files.map((file) => [
           productId,
@@ -154,11 +140,60 @@ router.put(
       res.json({ message: "Product updated successfully" });
     } catch (error) {
       await db.query("ROLLBACK");
+      // Clean up newly uploaded files on error if any exist
+      if (req.files) {
+        await Promise.all(
+          req.files.map((file) => fs.unlink(file.path).catch(console.error))
+        );
+      }
       console.error("Error: ", error);
       res.status(500).json({ message: "Error updating product" });
     }
   }
 );
+
+// --- START: ADDED CODE BLOCK ---
+// This new route handles the deletion of a single image for a product.
+router.delete("/products/:id/images/:filename", adminAuth, async (req, res) => {
+  const { filename } = req.params;
+
+  if (!filename) {
+    return res.status(400).json({ message: "Image filename is required." });
+  }
+
+  try {
+    // Find the image in the database to get its filepath for deletion
+    const [images] = await db.query(
+      "SELECT filepath FROM product_images WHERE filename = ?",
+      [filename]
+    );
+
+    if (images.length === 0) {
+      return res.status(404).json({ message: "Image not found in database." });
+    }
+
+    const image = images[0];
+
+    // 1. Delete the physical file from the server's storage
+    await fs.unlink(image.filepath).catch((err) => {
+      // Log error if file doesn't exist but don't stop the process,
+      // as we still want to remove the DB record.
+      console.error(
+        "Failed to delete file from disk, but continuing to delete DB record:",
+        err
+      );
+    });
+
+    // 2. Delete the image record from the database
+    await db.query("DELETE FROM product_images WHERE filename = ?", [filename]);
+
+    res.json({ message: "Image deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting image:", error);
+    res.status(500).json({ message: "Error deleting image" });
+  }
+});
+// --- END: ADDED CODE BLOCK ---
 
 // Delete product
 router.delete("/products/:id", adminAuth, async (req, res) => {
