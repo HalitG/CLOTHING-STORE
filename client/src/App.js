@@ -14,6 +14,7 @@ import AdminProducts from "./pages/AdminProducts";
 import AdminProductCreate from "./pages/AdminProductCreate";
 import AdminProductEdit from "./pages/AdminProductEdit";
 import Checkout from "./pages/Checkout";
+import OrderSuccess from "./pages/OrderSuccess";
 import { CartProvider } from "./context/cartContext";
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order-success" element={<OrderSuccess />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
