@@ -21,14 +21,14 @@ const InitialState = {
 const cartReducer = (state, action) => {
   switch (action.type) {
     case CART_ACTIONS.ADD_TO_CART: {
-      const existingItemIndex = state.item.findIndex(
+      const existingItemIndex = state.items.findIndex(
         (item) => item.id === action.payload.id
       );
 
       let updatedItems;
       if (existingItemIndex > -1) {
         // Items exists, update quantity
-        updatedItems = state.item.map((item, index) => {
+        updatedItems = state.items.map((item, index) => {
           if (index === existingItemIndex) {
             return {
               ...item,
@@ -172,7 +172,7 @@ export function CartProvider({ children }) {
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {
-    throw new Error("useCart muser be used within a CartProvider");
+    throw new Error("useCart must be used within a CartProvider");
   }
   return context;
 };
