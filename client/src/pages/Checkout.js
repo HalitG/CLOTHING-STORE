@@ -37,7 +37,7 @@ const Checkout = () => {
       const orderData = {
         items: cart.items,
         totalAmount: cart.totalAmount,
-        shippinDetails: formData,
+        shippingDetails: formData,
         userId: user?.id,
       };
 
