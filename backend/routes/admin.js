@@ -5,6 +5,42 @@ const adminAuth = require("../middleware/adminAuth");
 const upload = require("../middleware/upload");
 const fs = require("fs").promises;
 
+// Admin Dashboard
+router.get("/stats", adminAuth, async (req, res) => {
+  try {
+    const [productCount] = await db.query(
+      "SELECT COUNT(*) as count FROM products"
+    );
+    const [userCount] = await db.query("SELECT COUNT(*) as count FROM user");
+    const [orderCount] = await db.query("SELECT COUNT(*) as count FROM orders");
+    const [totalRevenue] = await db.query(
+      "SELECT SUM(total_amount) as total FROM orders WHERE status = 'delivered'"
+    );
+
+    // Add more detailed stats
+    const [orderStats] = await db.query(`
+        SELECT
+          COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_orders,
+          COUNT(CASE WHEN status = 'processing' THEN 1 END) as processing_orders,
+          COUNT(CASE WHEN status = 'shipped' THEN 1 END) as shipped_orders,
+          COUNT(CASE WHEN status = 'delivered' THEN 1 END) as delivered_orders,
+          COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled_orders,
+        FROM orders
+      `);
+
+    res.json({
+      products: productCount[0].count,
+      users: userCount[0].count,
+      orders: orderCount[0].count,
+      revenue: totalRevenue[0].total || 0,
+      orderStats: orderStats[0],
+    });
+  } catch (error) {
+    console.error("Error", error);
+    res.status(500).json({ message: "Error fetching stats" });
+  }
+});
+
 // Product management
 // get all products with detailed info
 router.get("/products", adminAuth, async (req, res) => {
@@ -222,6 +258,124 @@ router.delete("/products/:id", adminAuth, async (req, res) => {
     await db.query("ROLLBACK");
     console.error("Error: ", error);
     res.status(500).json({ message: "Error deleting product" });
+  }
+});
+
+// Order Management
+// orders route
+router.get("/orders", adminAuth, async (req, res) => {
+  try {
+    const [orders] = await db.query(`
+      SELECT o.*, u.email, u.first_name, u.last_name,
+        COUNT(oi.id) as item_count,
+        GROUP_CONCAT(DISTINCT p.name) as products,
+        o.shipping_address, o.shipping_city,
+        o.shipping_postal_code, o.shipping_phone
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.id
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      LEFT JOIN products p ON oi.product_id = p.id
+      GROUP BY o.id
+      ORDER BY o.created_at DESC
+      `);
+
+    res.json(orders);
+  } catch (error) {
+    console.error("Error in orders route:", error);
+    res.status(500).json({ message: "Error fetching orders" });
+  }
+});
+
+// Get single order details
+router.get("/order/:id", adminAuth, async (req, res) => {
+  try {
+    // Get order details with shipping information
+    const [orders] = await db.query(
+      `
+      SELECT o.*, u.email, u.first_name, u.last_name,
+        o.shipping_address, o.shipping_city,
+        o.shipping_postal_code, o.shipping_phone
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.id
+      WHERE o.id = ?
+      `,
+      [req.params.id]
+    );
+
+    if (orders.length === 0) {
+      return res.status(404).json({ message: "order not found" });
+    }
+
+    // Get order items with product details
+    const [orderItems] = await db.query(
+      `
+        SELECT oi.*, p.name, p.images
+        FROM order_items oi
+        LEFT JOIN products p ON oi.product_id = p.id
+        WHERE oi.order_id = ?
+        `,
+      [req.params.id]
+    );
+
+    const order = orders[0];
+    order.items = orderItems;
+
+    res.json(order);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ message: "Error fetching order details" });
+  }
+});
+
+// Update order status
+router.put("/order/:id/status", adminAuth, async (req, res) => {
+  const [status] = req.body;
+  const orderId = req.params.id;
+
+  try {
+    // Validate status
+    if (
+      !["pending", "processing", "shipped", "delivered", "cancelled"].includes(
+        status
+      )
+    ) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    // Start transaction
+    await db.query("START TRANSACTION");
+
+    // Update order status
+    const [result] = await db.query(
+      "UPDATE orders SET status = ?, updated_at = NOW() WHERE id = ?",
+      [status, orderId]
+    );
+
+    if (result.affectedRows === 0) {
+      await db.query("ROLLBACK");
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Id order is cancelled, restore product stock
+    if (status === "cancelled") {
+      const [orderItems] = await db.query(
+        "SELECT product_id, quantity FROM order_items WHERE order_id = ?"
+      );
+
+      for (const item of orderItems) {
+        await db.query("UPDATE products SET stock = stock + ? WHERE id = ?", [
+          item.quantity,
+          item.product_id,
+        ]);
+      }
+    }
+
+    await db.query("COMMIT");
+    res.json({ message: "Order status updated successfully" });
+  } catch (error) {
+    await db.query("ROLLBACK");
+    console.error("Error", error);
+    res.status(500).json({ message: "Error updating order status" });
   }
 });
 

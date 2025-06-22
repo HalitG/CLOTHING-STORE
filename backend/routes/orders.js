@@ -14,7 +14,7 @@ router.post("/", authMiddleware, async (req, res) => {
 
     // Create order
     const [orderResult] = await db.query(
-      "INSERT INTO order (user_id, total_amount, status, shipping_address, shipping_city, shipping_postal_code, shipping_phone) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO orders (user_id, total_amount, status, shipping_address, shipping_city, shipping_postal_code, shipping_phone) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [
         userId,
         totalAmount,
@@ -43,11 +43,10 @@ router.post("/", authMiddleware, async (req, res) => {
 
     // Update product stock
     for (const item of items) {
-      await db.query(
-        "UPDATE products SET stock = stock - ? WHERE id = ?"[
-          (item.quantity, item.id)
-        ]
-      );
+      await db.query("UPDATE products SET stock = stock - ? WHERE id = ?", [
+        item.quantity,
+        item.id,
+      ]);
     }
 
     // Commit transaction
@@ -73,7 +72,7 @@ router.get("/my-orders", authMiddleware, async (req, res) => {
                 select o.*,
                     COUNT(oi.id) as total_items, 
                     GROUP_CONCAT(p.name) as product_names
-                FROM order o 
+                FROM orders o 
                 LEFT JOIN order_items oi ON o.id = oi.order_id 
                 LEFT JOIN products p ON oi.product_id = p.id 
                 WHERE o.user_id = ?
