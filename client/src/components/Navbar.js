@@ -46,6 +46,12 @@ const Navbar = () => {
                     >
                       Products
                     </Link>
+                    <Link
+                      to="/admin/orders"
+                      className="text-gray-600 hover:text-blue-600"
+                    >
+                      Orders
+                    </Link>
                   </div>
                 ) : (
                   // Regular User Links
